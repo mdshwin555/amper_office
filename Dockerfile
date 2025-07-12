@@ -8,13 +8,11 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    zip \
     unzip \
+    zip \
     nginx \
-    supervisor
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+    supervisor \
+    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -23,19 +21,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy application files
-COPY . /var/www
+COPY . .
 
-# Install PHP dependencies with Composer
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies with Composer (ignore zip if needed)
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-zip
 
 # Fix permissions
 RUN chown -R www-data:www-data /var/www
 
-# Copy nginx configuration
+# Copy nginx config
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Expose port
 EXPOSE 80
 
-# Run both nginx and php-fpm using supervisor
+# Start supervisor to run both nginx and php-fpm
 CMD ["/usr/bin/supervisord", "-n"]
