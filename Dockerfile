@@ -19,11 +19,11 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip gd
 # تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# مجلد المشروع الصحيح حسب nginx
-WORKDIR /var/www/amperOffice
+# مجلد العمل الصحيح
+WORKDIR /var/www
 
-# نسخ ملفات المشروع
-COPY . /var/www/amperOffice
+# نسخ المشروع كامل
+COPY . /var/www
 
 # تثبيت الحزم
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
