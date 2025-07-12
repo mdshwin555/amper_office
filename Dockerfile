@@ -34,8 +34,11 @@ RUN chown -R www-data:www-data /var/www
 # نسخ إعدادات nginx
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
+# نسخ إعدادات supervisor لتشغيل php-fpm و nginx سوا
+COPY ./docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # فتح البورت
 EXPOSE 80
 
-# بدء Supervisor لتشغيل nginx و php-fpm
+# بدء Supervisor لتشغيل الخدمات
 CMD ["/usr/bin/supervisord", "-n"]
