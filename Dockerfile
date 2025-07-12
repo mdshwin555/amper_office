@@ -19,33 +19,28 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip gd
 # تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# تحديد مجلد العمل
-WORKDIR /var/www
+# مجلد المشروع الصحيح حسب nginx
+WORKDIR /var/www/amperOffice
 
 # نسخ ملفات المشروع
-COPY . .
+COPY . /var/www/amperOffice
 
-# نسخ ملف البيئة إذا مو مضاف مسبقاً (تحقق بنفسك)
-# COPY .env.example .env
-
-# تثبيت حزم Laravel
+# تثبيت الحزم
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# توليد مفتاح التطبيق (لو ناقص)
+# توليد مفتاح التطبيق
 RUN php artisan key:generate || true
 
-# إعداد الصلاحيات للكتابة
+# صلاحيات
 RUN chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data /var/www
 
-# نسخ إعدادات Nginx
+# نسخ إعدادات Nginx و Supervisor
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-
-# نسخ إعدادات Supervisor
 COPY ./docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # فتح البورت
 EXPOSE 80
 
-# تشغيل Supervisor
+# بدء التشغيل
 CMD ["/usr/bin/supervisord", "-n"]
