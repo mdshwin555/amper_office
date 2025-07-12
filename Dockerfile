@@ -7,13 +7,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libzip-dev \           # ✅ ضروري لتثبيت امتداد zip
     zip \
     unzip \
     nginx \
     supervisor
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip  # ✅ ضفنا zip هون
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -21,6 +22,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Copy project files
 COPY . /var/www
 
 # Install dependencies with composer
