@@ -13,32 +13,39 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor
 
-# تثبيت الإضافات الخاصة بـ PHP
+# تثبيت إضافات PHP
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip gd
 
 # تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# إنشاء مجلد العمل
+# تحديد مجلد العمل
 WORKDIR /var/www
 
 # نسخ ملفات المشروع
 COPY . .
 
-# تثبيت الحزم باستخدام Composer (وحل مشكلة الامتدادات)
+# نسخ ملف البيئة إذا مو مضاف مسبقاً (تحقق بنفسك)
+# COPY .env.example .env
+
+# تثبيت حزم Laravel
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# إعطاء الصلاحيات
-RUN chown -R www-data:www-data /var/www
+# توليد مفتاح التطبيق (لو ناقص)
+RUN php artisan key:generate || true
 
-# نسخ إعدادات nginx
+# إعداد الصلاحيات للكتابة
+RUN chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data /var/www
+
+# نسخ إعدادات Nginx
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# نسخ إعدادات supervisor لتشغيل php-fpm و nginx سوا
+# نسخ إعدادات Supervisor
 COPY ./docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # فتح البورت
 EXPOSE 80
 
-# بدء Supervisor لتشغيل الخدمات
+# تشغيل Supervisor
 CMD ["/usr/bin/supervisord", "-n"]
