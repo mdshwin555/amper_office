@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# تثبيت الحزم الأساسية
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,29 +11,31 @@ RUN apt-get update && apt-get install -y \
     unzip \
     zip \
     nginx \
-    supervisor \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+    supervisor
 
-# Install Composer
+# تثبيت الإضافات الخاصة بـ PHP
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip gd
+
+# تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# إنشاء مجلد العمل
 WORKDIR /var/www
 
-# Copy application files
+# نسخ ملفات المشروع
 COPY . .
 
-# Install PHP dependencies with Composer (ignore zip if needed)
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-zip
+# تثبيت الحزم باستخدام Composer (وحل مشكلة الامتدادات)
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# Fix permissions
+# إعطاء الصلاحيات
 RUN chown -R www-data:www-data /var/www
 
-# Copy nginx config
+# نسخ إعدادات nginx
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# فتح البورت
 EXPOSE 80
 
-# Start supervisor to run both nginx and php-fpm
+# بدء Supervisor لتشغيل nginx و php-fpm
 CMD ["/usr/bin/supervisord", "-n"]
