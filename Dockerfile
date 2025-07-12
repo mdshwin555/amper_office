@@ -31,6 +31,10 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 # توليد مفتاح التطبيق
 RUN php artisan key:generate || true
 
+# 🔥 تنظيف الكاش القديم وبناؤه من جديد لتفعيل Filament routes
+RUN php artisan config:clear && php artisan route:clear
+RUN php artisan config:cache && php artisan route:cache
+
 # صلاحيات
 RUN chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data /var/www
